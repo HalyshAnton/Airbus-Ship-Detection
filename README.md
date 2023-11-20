@@ -10,7 +10,7 @@ For downloading data run next line ! kaggle competitions download -c 'airbus-shi
 # Exploratory Data Analysis (EDA)
 During the exploratory data analysis, it was observed that a significant portion of the images contains no ships. 
 
-![alt text](https://github.com/HalyshAnton/Airbus-Ship-Detection/blob/main/images/ship count distribution.png)
+![alt text](https://github.com/HalyshAnton/Airbus-Ship-Detection/blob/main/images/ship_count_distribution.png)
 
 Also size of images is too big so for managing computational resources efficiently imeges was croped into patches and only those ones with ships were selected(or random patch if original image doesn't contain ships). This approach not only reduces the computational burden but also ensures that the model is trained on meaningful ship-containing regions.
 
