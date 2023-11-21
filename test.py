@@ -52,7 +52,7 @@ def make_prediction_patch(patches, model):
 
 def main():
     img_path = sys.argv[1]
-    mask_path = img_path[:-4] + "_mask.jpg"
+    mask_path = img_path[:-4] + "_mask.png"
 
     image = imread(img_path)
 
