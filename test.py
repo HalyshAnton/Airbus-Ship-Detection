@@ -61,5 +61,10 @@ def main():
 
     mask = make_prediction(image, model)
 
-    mask = Image.fromarray(mask)
-    mask.save(mask_path)
+    plt.imshow(mask, cmap="gray_r")
+    plt.axis("off")
+    plt.savefig(mask_path)
+
+
+if __name__ == "__main__":
+    main()
