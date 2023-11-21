@@ -287,7 +287,7 @@ def parse_opt():
     parser.add_argument("--crop", type=int, default=256, help="size for cropping")
     parser.add_argument("--batch-size", type=int, default=32, help="batch size")
     parser.add_argument("--epochs", type=int, default=10, help="number of epoch")
-    parser.add_argument("--weights-path", type=int, default="weights.h5", help="path for saving model weights")
+    parser.add_argument("--weights-path", type=str, default="weights.h5", help="path for saving model weights")
 
     return parser.parse_args()
 
