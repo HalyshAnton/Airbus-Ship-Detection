@@ -286,15 +286,11 @@ def bce_dice_loss(y_true, y_pred):
 def main():
     np.random.seed(42)
 
-    if len(sys.argv) == 2:
-        train_img_dir = sys.argv[1]
-    else:
-        print("You didn't specify directory")
-        sys.exit(1)
+    train_img_dir = "data/images"
 
     # creating data generators
-    train_df = pd.read_csv("train_df.csv")
-    val_df = pd.read_csv("val_df.csv")
+    train_df = pd.read_csv("data/train_df.csv")
+    val_df = pd.read_csv("data/val_df.csv")
 
     train_gen = make_image_gen(train_df, train_img_dir, batch_size=BATCH_SIZE)
     val_gen = make_image_gen(val_df, train_img_dir, batch_size=BATCH_SIZE)
