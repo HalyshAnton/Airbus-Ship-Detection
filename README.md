@@ -21,7 +21,14 @@ After all about 10 000 images was selected.
 # Model
 The chosen model architecture for this ship detection problem is the U-Net with pretrained EddicientNetB0 encoder.
 
-For training, the model is optimized using a combination of Binary Cross-Entropy (BCE) loss and Dice loss. This combination leads to more stable training with unbalaced prediction masks(ships 
+For training, the model is optimized using a combination of Binary Cross-Entropy (BCE) loss and Dice loss. This combination leads to more stable training with unbalaced prediction masks.
+
+Parameters:
+* optimizer Adam
+* learning rate 1e-4
+* batch size 32
+* epochs 10
+* callback ReduceLROnPlateau
 
 # Prediction
 To generate predictions, the input image is divided into overlapping patches. These patches are subjected to horizontal and vertical flips. The model is then applied to each patch, and average prediction is obtained. Then predictions from patches are merged to final result. This ensemble approach called TTA enhances the robustness of the predictions and improves the overall segmentation performance.
