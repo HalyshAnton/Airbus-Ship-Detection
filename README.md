@@ -30,4 +30,5 @@ To generate predictions, the input image is divided into overlapping patches. Th
 
 # Inference
 For training load directory with training images you should unzip data/images.zip and run line py train.py
+
 For testing run line py test.py "path_to_image"
