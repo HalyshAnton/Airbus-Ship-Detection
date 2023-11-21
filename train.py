@@ -1,4 +1,4 @@
-import sys
+import argparse
 import numpy as np
 import pandas as pd
 from skimage.io import imread
@@ -12,9 +12,6 @@ from keras.preprocessing.image import ImageDataGenerator
 
 
 IMG_SIZE = (768, 768)
-CROP_SIZE = (256, 256)
-BATCH_SIZE = 32
-NUM_EPOCH = 10
 
 DG_ARGS = dict(featurewise_center = False,
                samplewise_center = False,
@@ -84,7 +81,7 @@ def rle_masks_to_array(in_mask_list):
     return mask
 
 
-def crop(image, mask):
+def crop(image, mask, crop_size):
     """
     Crop the given image and mask into smaller patches based on the specified
     crop size. Patches with ships are selected based on a mean value threshold of the mask.
@@ -93,44 +90,45 @@ def crop(image, mask):
     Parameters:
     - image (numpy.ndarray): The input image to be cropped.
     - mask (numpy.ndarray): The mask associated with the input image.
+    - crop_size (int): The size of each patches
 
     Returns:
     - images (list of numpy.ndarray): List of cropped image patches.
     - masks (list of numpy.ndarray): List of corresponding cropped mask patches.
     """
 
-    mean_num = np.sum(mask) / np.prod(np.array(IMG_SIZE) / np.array(CROP_SIZE))
+    mean_num = np.sum(mask) / (np.prod(np.array(IMG_SIZE)) / crop_size**2)
 
     # no ship case
     if mean_num == 0:
-        i, j = np.array(CROP_SIZE) * np.random.randint(3, size=(2,))
+        i, j = np.array((crop_size, crop_size)) * np.random.randint(IMG_SIZE[0] // crop_size, size=(2,))
 
-        mask_crop = mask[i:i+CROP_SIZE[0], j:j+CROP_SIZE[1], :]
-        image_crop = image[i:i+CROP_SIZE[0], j:j+CROP_SIZE[1], :]
+        mask_crop = mask[i:i+crop_size, j:j+crop_size, :]
+        image_crop = image[i:i+crop_size, j:j+crop_size, :]
 
         return [image_crop], [mask_crop]
 
     images = []
     masks = []
 
-    for i in range(0, IMG_SIZE[0], CROP_SIZE[0]):
-        for j in range(0, IMG_SIZE[1], CROP_SIZE[1]):
-            mask_crop = mask[i:i+CROP_SIZE[0], j:j+CROP_SIZE[1], :]
+    for i in range(0, IMG_SIZE[0], crop_size):
+        for j in range(0, IMG_SIZE[1], crop_size):
+            mask_crop = mask[i:i+crop_size, j:j+crop_size, :]
 
             if np.sum(mask_crop) >= mean_num:
-                images += [image[i:i+CROP_SIZE[0], j:j+CROP_SIZE[1], :]]
+                images += [image[i:i+crop_size, j:j+crop_size, :]]
                 masks += [mask_crop]
 
     return images, masks
 
 
-def make_image_gen(in_df, train_img_dir, batch_size=BATCH_SIZE):
+def make_image_gen(in_df, opt):
     """
     Generator function to yield batches of images and corresponding masks for training.
 
     Parameters:
     - in_df (pd.DataFrame): DataFrame containing information about images and their encoded masks.
-    - batch_size (int, optional): Number of samples in each batch.
+    - opt (parser): Parser with parameters
 
     Yields:
     - tuple: A tuple containing a batch of images and their corresponding masks.
@@ -143,20 +141,20 @@ def make_image_gen(in_df, train_img_dir, batch_size=BATCH_SIZE):
     out_img = []
     out_mask = []
     while True:
-        for img_id, rle_masks in all_batches.sample(batch_size).items():
-            image = imread(train_img_dir + "/" + img_id)
+        for img_id, rle_masks in all_batches.sample(opt.batch_size).items():
+            image = imread(opt.data + "/" + img_id)
             mask = rle_masks_to_array(rle_masks)
             mask = np.expand_dims(mask, axis=-1)
 
-            image_patches, mask_patches = crop(image, mask)
+            image_patches, mask_patches = crop(image, mask, opt.crop)
 
             out_img += image_patches
             out_mask += mask_patches
 
-            if len(out_img) >= BATCH_SIZE:
-                yield np.stack(out_img[:BATCH_SIZE]), np.stack(out_mask[:BATCH_SIZE])
-                out_img = out_img[BATCH_SIZE:]
-                out_mask = out_mask[BATCH_SIZE:]
+            if len(out_img) >= opt.batch_size:
+                yield np.stack(out_img[:opt.batch_size]), np.stack(out_mask[:opt.batch_size])
+                out_img = out_img[opt.batch_size:]
+                out_mask = out_mask[opt.batch_size:]
 
 
 def create_aug_gen(in_gen, seed=None):
@@ -212,13 +210,12 @@ def decoder_block(filters, in1, in2):
     return out
 
 
-def get_model():
+def get_model(input_shape):
     """
-    Creates a U-Net convolutional neural network model for image segmentation.
+    Creates a U-Net convolutional neural network model with pretrained encoder.
 
     Parameters:
-    - start_filters (int): number of filters in the first convolutional layer.
-    - depth (int): number of downsampling and upsampling steps.
+    - input_shape (tuple, (N, M, 3)): input images shape for neural network
 
     Returns:
     - keras.models.Model
@@ -227,7 +224,7 @@ def get_model():
     Returned model includes preprocessing
     """
 
-    input_img = layers.Input(CROP_SIZE + (3,))
+    input_img = layers.Input(input_shape)
 
     # pretrained encoder
     encoder = EfficientNetB0(
@@ -283,25 +280,37 @@ def bce_dice_loss(y_true, y_pred):
     return bce + 1 - dice_score(y_true, y_pred)
 
 
+def parse_opt():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=str, default="data/images/kaggle/input/airbus-ship-detection/images",
+                        help="directory with images for training")
+    parser.add_argument("--crop", type=int, default=256, help="size for cropping")
+    parser.add_argument("--batch-size", type=int, default=32, help="batch size")
+    parser.add_argument("--epochs", type=int, default=10, help="number of epoch")
+    parser.add_argument("--weights-path", type=int, default="weights.h5", help="path for saving model weights")
+
+    return parser.parse_args()
+
+
 def main():
     np.random.seed(42)
 
-    train_img_dir = "data/images/kaggle/input/airbus-ship-detection/images"
+    opt = parse_opt()
 
     # creating data generators
     train_df = pd.read_csv("data/train_df.csv")
     val_df = pd.read_csv("data/val_df.csv")
 
-    train_gen = make_image_gen(train_df, train_img_dir, batch_size=BATCH_SIZE)
-    val_gen = make_image_gen(val_df, train_img_dir, batch_size=BATCH_SIZE)
+    train_gen = make_image_gen(train_df, opt)
+    val_gen = make_image_gen(val_df, opt)
 
     train_gen = create_aug_gen(train_gen)
 
     # model training
-    seg_model = get_model()
+    seg_model = get_model((opt.crop, opt.crop, 3))
 
-    step_count = train_df["ImageId"].nunique() // BATCH_SIZE
-    val_step_count = val_df["ImageId"].nunique() // BATCH_SIZE
+    step_count = train_df["ImageId"].nunique() // opt.batch_size
+    val_step_count = val_df["ImageId"].nunique() // opt.batch_size
 
     callback = ReduceLROnPlateau(
                             monitor="val_loss",
@@ -313,13 +322,12 @@ def main():
                                  validation_data=val_gen,
                                  steps_per_epoch=step_count,
                                  validation_steps = val_step_count,
-                                 epochs=NUM_EPOCH,
+                                 epochs=opt.epochs,
                                  callbacks=[callback]
                                 )
 
     # model saving
-    seg_model.save_weights("weights.h5")
-
+    seg_model.save_weights(opt.weights_path)
 
 if __name__ == "__main__":
     main()
