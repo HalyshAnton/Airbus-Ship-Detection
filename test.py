@@ -1,32 +1,56 @@
-import sys
-from PIL import Image
+import argparse
 import numpy as np
 from skimage.io import imread
 from skimage.util import montage
+from PIL import Image
 
 
-from train import get_model, IMG_SIZE, CROP_SIZE
+from train import get_model
 
 
-def make_prediction(image, model):
+def make_prediction(image, model, img_size, opt):
+    """
+    Make semantic segmentation prediction for a given input image using a specified model.
+
+    Parameters:
+    - image (numpy.ndarray): Input image as a NumPy array.
+    - model: The semantic segmentation model to use for prediction.
+    - img_size (tuple): Tuple specifying the dimensions (height, width) of the input image.
+    - opt: Command-line arguments and options obtained from `parse_opt()`.
+
+    Returns:
+    - numpy.ndarray: predicted binary mask with shape img_size
+    """
+    
     if image.ndim < 4:
         image = np.expand_dims(image, axis=0)
 
     masks = []
 
-    for i in range(0, IMG_SIZE[0], CROP_SIZE[0]):
-        for j in range(0, IMG_SIZE[1], CROP_SIZE[1]):
-            patches = image[:, i:i + CROP_SIZE[0], j:j + CROP_SIZE[1], :]
+    for i in range(0, img_size[0], opt.crop):
+        for j in range(0, img_size[1], opt.crop):
+            patches = image[:, i:i + opt.crop, j:j + opt.crop, :]
             masks += [make_prediction_patch(patches, model)]
 
     return montage(masks)
 
 
 def make_prediction_patch(patches, model):
+    """
+    Make semantic segmentation prediction for a given patch using a specified model.
+
+    Parameters:
+    - patches (numpy.ndarray): Input patch as a NumPy array.
+    - model: The semantic segmentation model to use for prediction.
+
+    Returns:
+    - numpy.ndarray: Predicted segmentation mask for the input patch
+    """
+    
     if patches.ndim < 4:
         patches = np.expand_dims(patches, axis=0)
 
-    final_mask = np.zeros(CROP_SIZE, dtype=float)
+    final_mask = np.zeros(patches.shape[1:3], dtype=float)
 
     for hor in (1, -1):
         for ver in (1, -1):
@@ -50,22 +74,30 @@ def make_prediction_patch(patches, model):
     return final_mask.astype(int)
 
 
+def parse_opt():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--image", type=str, help="path to image")
+    parser.add_argument("--crop", type=int, default=256, help="size for cropping")
+    parser.add_argument("--weights", type=str, default="weights.h5", help="path to file with model weights")
+
+    return parser.parse_args()
+
+
 def main():
-    if len(sys.argv) < 2:
-        print("You didn't specify image path")
-        sys.exit(1)
-        
-    img_path = sys.argv[1]
+    opt = parse_opt()
+
+    img_path = opt.image
     mask_path = img_path[:-4] + "_mask.jpg"
 
     image = imread(img_path)
+    img_size = image.shape[:2]
 
-    model = get_model()
-    model.load_weights("weights.h5")
+    model = get_model((opt.crop, opt.crop, 3))
+    model.load_weights(opt.weights)
 
-    mask = make_prediction(image, model)
+    mask = make_prediction(image, model, img_size, opt)
 
-    mask_im = Image.fromarray(mask.astype('uint8')*255)
+    mask_im = Image.fromarray(mask.astype('uint8') * 255)
     mask_im.save(mask_path)
 
 
