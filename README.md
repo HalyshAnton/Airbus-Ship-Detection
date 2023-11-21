@@ -25,3 +25,8 @@ For training, the model is optimized using a combination of Binary Cross-Entropy
 
 # Prediction
 To generate predictions, the input image is divided into overlapping patches. These patches are subjected to horizontal and vertical flips. The model is then applied to each patch, and average prediction is obtained. Then predictions from patches are merged to final result. This ensemble approach called TTA enhances the robustness of the predictions and improves the overall segmentation performance.
+
+![alt text](https://github.com/HalyshAnton/Airbus-Ship-Detection/blob/main/images/prediction.png)
+
+# Inference
+For training load directory with training images
