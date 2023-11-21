@@ -286,7 +286,7 @@ def bce_dice_loss(y_true, y_pred):
 def main():
     np.random.seed(42)
 
-    train_img_dir = "data/images"
+    train_img_dir = "data/images/kaggle/input/airbus-ship-detection/images"
 
     # creating data generators
     train_df = pd.read_csv("data/train_df.csv")
