@@ -29,6 +29,10 @@ To generate predictions, the input image is divided into overlapping patches. Th
 ![alt text](https://github.com/HalyshAnton/Airbus-Ship-Detection/blob/main/images/prediction.png)
 
 # Inference
-For training load directory with training images you should unzip data/images.zip and run line py train.py
+For training load directory with training images you should unzip data/images.zip and run line 
 
-For testing run line py test.py "path_to_image"
+py train.py --data "path to image dataset" --crop "size gor cropping" --batch-size 32 --epochs 10 --weights "path for saving model weights"
+
+For testing run line 
+
+py test.py --image "path_to_image" --crop "size for cropping" --weights "path to model weights"
