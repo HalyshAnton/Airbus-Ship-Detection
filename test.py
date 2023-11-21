@@ -51,8 +51,12 @@ def make_prediction_patch(patches, model):
 
 
 def main():
+    if len(sys.argv) < 2:
+        print("You didn't specify image path")
+        sys.exit(1)
+        
     img_path = sys.argv[1]
-    mask_path = img_path[:-4] + "_mask.png"
+    mask_path = img_path[:-4] + "_mask.jpg"
 
     image = imread(img_path)
 
@@ -61,9 +65,8 @@ def main():
 
     mask = make_prediction(image, model)
 
-    plt.imshow(mask, cmap="gray_r")
-    plt.axis("off")
-    plt.savefig(mask_path)
+    mask_im = Image.fromarray(mask.astype('uint8')*255)
+    mask_im.save(mask_path)
 
 
 if __name__ == "__main__":
