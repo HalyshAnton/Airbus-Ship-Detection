@@ -38,6 +38,7 @@ def make_prediction(image, model, img_size, opt):
 def make_prediction_patch(patches, model):
     """
     Make semantic segmentation prediction for a given patch using a specified model.
+    Apply horizontal and vertical flips for robust prediction
 
     Parameters:
     - patches (numpy.ndarray): Input patch as a NumPy array.
