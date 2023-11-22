@@ -42,7 +42,7 @@ To generate predictions, the input image is divided into overlapping patches. Th
 # Inference
 For training load directory with training images or unzip data/images.zip then run line 
 ```
-py train.py --data "path to image dataset" --crop "size gor cropping" --batch-size 32 --epochs 10 --weights "path for saving model weights"
+py train.py --data "path to image dataset" --crop "size for cropping" --batch-size 32 --epochs 10 --weights "path for saving model weights"
 ```
 For testing run line 
 ```
