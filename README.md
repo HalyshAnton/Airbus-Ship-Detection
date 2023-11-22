@@ -2,6 +2,10 @@
 
 The Airbus Ship Detection Challenge involves the task of identifying and segmenting ships in satellite images. The problem revolves around semantic image segmentation, where the goal is to accurately delineate the boundaries of ships within a given image. This segmentation task is crucial for applications such as maritime surveillance, navigation, and environmental monitoring.
 
+Usful articles:
+[https://arxiv.org/pdf/2001.05566.pdf](https://arxiv.org/pdf/2001.05566.pdf)
+
+
 # Data
 The dataset consists of satellite images paired with corresponding binary masks indicating the presence or absence of ships. The masks are encoded using the Run-Length Encoding (RLE) format. Each mask is a flattened representation of the segmented region, providing a concise description of pixel runs.
 
@@ -36,10 +40,11 @@ To generate predictions, the input image is divided into overlapping patches. Th
 ![alt text](https://github.com/HalyshAnton/Airbus-Ship-Detection/blob/main/images/prediction.png)
 
 # Inference
-For training load directory with training images you should unzip data/images.zip and run line 
-
+For training load directory with training images or unzip data/images.zip then run line 
+```
 py train.py --data "path to image dataset" --crop "size gor cropping" --batch-size 32 --epochs 10 --weights "path for saving model weights"
-
+```
 For testing run line 
-
+```
 py test.py --image "path_to_image" --crop "size for cropping" --weights "path to model weights"
+```
