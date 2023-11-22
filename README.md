@@ -2,7 +2,7 @@
 
 The Airbus Ship Detection Challenge involves the task of identifying and segmenting ships in satellite images. The problem revolves around semantic image segmentation, where the goal is to accurately delineate the boundaries of ships within a given image. This segmentation task is crucial for applications such as maritime surveillance, navigation, and environmental monitoring.
 
-Usful articles:
+Usful article:
 [https://arxiv.org/pdf/2001.05566.pdf](https://arxiv.org/pdf/2001.05566.pdf)
 
 
